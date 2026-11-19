@@ -1,0 +1,31 @@
+{
+  "name": "codepilot-ai",
+  "version": "3.0.0",
+  "private": true,
+  "description": "CodePilot AI \u2014 Your AI-Powered Programming Companion",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c magenta,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run typecheck -w server",
+    "start": "npm run build -w client && npm run start -w server",
+    "test": "npm run test -w server && npm run test -w client",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
+    "e2e": "npm run build -w client && playwright test",
+    "e2e:only": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "concurrently": "^9.2.5"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rkslakshay/CodePilot-AI.git"
+  }
+}

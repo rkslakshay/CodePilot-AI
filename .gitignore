@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------- dependencies & builds
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# ---------------------------------------------------------------- local data (never commit)
+# SQLite database with your projects, history and settings, backups, imported repositories,
+# and the locally compiled Windows sandbox executable
+server/data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ---------------------------------------------------------------- secrets & environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# ---------------------------------------------------------------- AI models (downloaded by Ollama, never by this project)
+*.gguf
+*.safetensors
+.ollama/
+
+# ---------------------------------------------------------------- test output
+e2e/.results/
+e2e/.report/
+e2e/.dump/
+e2e/.tmp/
+playwright-report/
+test-results/
+
+# ---------------------------------------------------------------- logs & temp
+*.log
+npm-debug.log*
+*.tmp
+*.tmp.ts
+tmp/
+
+# ---------------------------------------------------------------- editor / OS / local tooling
+.claude/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

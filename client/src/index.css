@@ -1,0 +1,257 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --color-bg: var(--bg);
+  --color-sidebar: var(--sidebar);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-elevated: var(--elevated);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --radius-xl: 0.85rem;
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.5);
+}
+
+:root,
+.dark {
+  --bg: #0b0d12;
+  --sidebar: #10141c;
+  --panel: #10141c;
+  --card: #151b26;
+  --elevated: #1b2230;
+  --border: #252d3a;
+  --border-strong: #323c4d;
+  --fg: #f1f3f8;
+  --muted: #929bad;
+  --subtle: #5f697c;
+  --primary: #8b7cff;
+  --primary-fg: #0b0d12;
+  --primary-soft: rgb(139 124 255 / 0.14);
+  --secondary: #35c9a5;
+  --secondary-soft: rgb(53 201 165 / 0.13);
+  --danger: #f7768e;
+  --danger-soft: rgb(247 118 142 / 0.13);
+  --warning: #f3b65d;
+  --warning-soft: rgb(243 182 93 / 0.13);
+  --success: #35c9a5;
+  --success-soft: rgb(53 201 165 / 0.13);
+  --info: #6cb6ff;
+  --info-soft: rgb(108 182 255 / 0.13);
+  color-scheme: dark;
+}
+
+.light {
+  --bg: #f5f6fa;
+  --sidebar: #ffffff;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --elevated: #f0f2f7;
+  --border: #e2e5ee;
+  --border-strong: #cdd2de;
+  --fg: #151a24;
+  --muted: #5c667a;
+  --subtle: #8b94a7;
+  --primary: #6c5ce7;
+  --primary-fg: #ffffff;
+  --primary-soft: rgb(108 92 231 / 0.1);
+  --secondary: #129b7c;
+  --secondary-soft: rgb(18 155 124 / 0.1);
+  --danger: #d63c5e;
+  --danger-soft: rgb(214 60 94 / 0.09);
+  --warning: #b7791f;
+  --warning-soft: rgb(183 121 31 / 0.1);
+  --success: #129b7c;
+  --success-soft: rgb(18 155 124 / 0.1);
+  --info: #2f7fd1;
+  --info-soft: rgb(47 127 209 / 0.1);
+  color-scheme: light;
+}
+
+[data-accent='teal'] {
+  --primary: #35c9a5;
+  --primary-soft: rgb(53 201 165 / 0.14);
+}
+[data-accent='blue'] {
+  --primary: #5b9dff;
+  --primary-soft: rgb(91 157 255 / 0.14);
+}
+[data-accent='amber'] {
+  --primary: #f3b65d;
+  --primary-soft: rgb(243 182 93 / 0.15);
+}
+.light[data-accent='teal'] {
+  --primary: #129b7c;
+}
+.light[data-accent='blue'] {
+  --primary: #2f7fd1;
+}
+.light[data-accent='amber'] {
+  --primary: #b7791f;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  @apply bg-bg font-sans text-fg antialiased;
+  font-size: 14px;
+  overflow: hidden;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+::selection {
+  background: var(--primary-soft);
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.font-mono {
+  font-feature-settings: 'calt' 1, 'liga' 0;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.22s ease-out both;
+}
+.animate-scale-in {
+  animation: scale-in 0.16s ease-out both;
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--elevated);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.04), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+/* prose-like content */
+.md p {
+  @apply leading-relaxed text-fg/90;
+}
+.md code,
+code.inline {
+  @apply rounded bg-elevated px-1.5 py-0.5 font-mono text-[12.5px] text-primary;
+}
+
+/* mermaid output */
+.mermaid-host svg {
+  max-width: none !important;
+  height: auto;
+}
+.mermaid-host .edgeLabel {
+  background: var(--card) !important;
+  color: var(--fg) !important;
+}
+.mermaid-host .edgeLabel p {
+  background: var(--card) !important;
+}
+
+/* visualiser bars */
+.bar {
+  transition:
+    height 0.25s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cp-line-highlight {
+  background: var(--primary-soft);
+  border-left: 2px solid var(--primary);
+}
+
+/* tooltips: opacity-only so the positioning transform is not overridden */
+@keyframes tt-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Respect the operating-system "reduce motion" preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Repository Analyzer severity scale (distinct hues + lightness so it also reads in grey-scale) */
+:root,
+.dark {
+  --sev-critical: #ff4d6d;
+  --sev-high: #ff8a5c;
+  --sev-medium: #f3c25d;
+  --sev-low: #6cb6ff;
+  --sev-info: #8b93a5;
+}
+.light {
+  --sev-critical: #b3122a;
+  --sev-high: #d4501a;
+  --sev-medium: #a86b00;
+  --sev-low: #1d6fd1;
+  --sev-info: #5f6878;
+}

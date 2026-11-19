@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in CodePilot AI does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please **do not paste secrets, API keys, private source code or personal file paths** into this issue.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - Dashboard
+        - AI Code Generator
+        - Code Converter
+        - Algorithm Studio
+        - Code Explainer
+        - Compiler & Debugger
+        - Repository Analyzer
+        - Learning Hub
+        - My Workspace / History
+        - Settings / Local AI (Ollama)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. See …
+  - type: input
+    id: version
+    attributes:
+      label: CodePilot AI version
+      placeholder: e.g. 3.0.0 (Settings → About)
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: e.g. Windows 11, Node 24, Ollama 0.x with qwen2.5-coder:1.5b (or offline)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Server console output or browser console errors (remove any personal paths).
+      render: text
