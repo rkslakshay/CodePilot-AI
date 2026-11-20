@@ -215,7 +215,7 @@ Latest results on the 3.1 release candidate (Windows 11, Node 24, from a clean c
 | Suite | Result |
 |---|---|
 | Type checks (server + client) | 0 errors |
-| Server tests (Vitest + Supertest, excluding live AI) | 312 / 312 passed |
+| Server tests (Vitest + Supertest, excluding live AI) | 315 / 315 passed |
 | Client tests | 15 / 15 passed |
 | Playwright E2E in Microsoft Edge | 67 passed (2 on-demand screenshot generators skipped) |
 | Live local AI (`qwen2.5-coder:1.5b`) | 7 / 8 in the last run; the repository-review case is flaky because the small model sometimes returns malformed JSON (the app then falls back to labelled offline results) |

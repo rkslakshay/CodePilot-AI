@@ -216,9 +216,41 @@ describe.runIf(process.platform === 'win32')('Windows sandbox (OS-enforced, bypa
     const r = await executeCode('c', code);
     expect(r.stdout).not.toMatch(/SPAWNED/);
   });
+  // Memory-limit programs must USE the memory they allocate: modern optimisers (e.g. GCC 15 at -O1) delete a
+  // malloc + memset whose result is never read and print "GOT" without allocating anything, so such a test
+  // would not exercise the sandbox at all. Each program below reads every touched page back and prints a checksum.
+  const touch = (mb: number) =>
+    `size_t n = ${mb}u*1024u*1024u; char *p = malloc(n); if (!p) { printf("REFUSED\\n"); return 0; } memset(p, 1, n); ` +
+    `volatile unsigned long s = 0; for (size_t i = 0; i < n; i += 4096) s += (unsigned char)p[i]; printf("GOT %lu\\n", (unsigned long)s); free(p); return 0;`;
   it('enforces the memory limit', async () => {
-    const r = await executeCode('c', evasive('char *p = malloc(900u*1024u*1024u); if (p) memset(p, 1, 900u*1024u*1024u); printf(p ? "GOT\\n" : "REFUSED\\n"); return 0;'));
+    const r = await executeCode('c', evasive(touch(900)));
     expect(r.stdout).not.toMatch(/GOT/);
+    expect(norm(r.stdout)).toBe('REFUSED\n');
+    expect(r.isolation).toBe('job+lowil');
+  });
+  it('allows a program within the memory limit (so the limit test really allocates)', async () => {
+    const r = await executeCode('c', evasive(touch(300)));
+    expect(norm(r.stdout)).toBe(`GOT ${(300 * 1024 * 1024) / 4096}\n`); // one byte read from every 4 KiB page
+  });
+  it('stops a program that grows step by step and touches every page, at the configured limit', async () => {
+    const r = await executeCode(
+      'c',
+      evasive(
+        'size_t mb = 0; volatile unsigned long s = 0; for (int i = 0; i < 80; i++) { char *p = malloc(16u*1024u*1024u); if (!p) break; memset(p, 1, 16u*1024u*1024u); ' +
+          'for (size_t k = 0; k < 16u*1024u*1024u; k += 4096) s += (unsigned char)p[k]; mb += 16; } printf("%s %zu %lu\\n", mb < 1280 ? "STOPPED" : "GOT", mb, (unsigned long)s); return 0;',
+      ),
+    );
+    const m = /^(STOPPED|GOT) (\d+) (\d+)/.exec(norm(r.stdout));
+    expect(m?.[1], r.stdout + r.stderr).toBe('STOPPED');
+    const reached = Number(m![2]);
+    expect(reached).toBeGreaterThanOrEqual(256); // it really allocated before being stopped...
+    expect(reached).toBeLessThanOrEqual(512); // ...and never beyond the 512 MB limit
+    expect(Number(m![3])).toBe((reached * 1024 * 1024) / 4096);
+  });
+  it('enforces the memory limit for interpreted languages too', async () => {
+    const r = await executeCode('python', 'b = bytearray(900 * 1024 * 1024)\nprint("GOT", len(b))');
+    expect(r.stdout).not.toMatch(/GOT/);
+    expect(r.stderr).toMatch(/MemoryError/);
   });
   it('cannot read a folder protected with no-read-up', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'cp-prot-'));

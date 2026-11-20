@@ -3,6 +3,16 @@
 **Date:** 2026-11-21 (3.1 section); earlier sections 2026-11-20
 **Machine:** Windows 11 (16 GB RAM), Node.js 24.19.0, Git 2.55.0, GCC/G++ 6.3.0 (MinGW.org), Java 26.0.1, Python 3.13.3, Microsoft Edge (installed), Ollama with `qwen2.5-coder:1.5b`. Ruff, Bandit, Semgrep and ESLint are **not** installed.
 
+## 3.1 — First GitHub Actions run: sandbox memory-limit test (2026-11-21)
+
+The first CI run (Windows Server 2025, build 26100) failed `Windows sandbox › enforces the memory limit`: the C test program printed `GOT` although the sandbox limits programs to 512 MB.
+
+**Root cause — the test, not the sandbox.** The program allocated 900 MB with `malloc` + `memset` but never read the memory. GitHub's runner compiles with GCC 15.2 (x86_64, MinGW-Builds); at the app's `-O1` it removed both calls as dead code and compiled `main()` to `puts("GOT")`, so nothing was allocated (the Job Object read-back showed a peak of 1 MB). Locally, GCC 6.3 (32-bit MinGW.org) removed only the `memset`, so the `malloc` still reached the limit and the test passed.
+
+**The limit itself is enforced on both machines.** Diagnostics on the runner and locally (temporary launcher instrumentation, since removed) showed: `SetInformationJobObject` succeeds with `JOB_OBJECT_LIMIT_PROCESS_MEMORY | JOB_OBJECT_LIMIT_JOB_MEMORY` and 512 MB limits read back by `QueryInformationJobObject`; the process is created suspended, is a member of the job before `ResumeThread`; a 900 MB allocation that is actually used is refused; growth in 16 MB steps touching every page stops at 496 MB (peak 497 MB); Python gets `MemoryError` at 900 MB while 300 MB is allowed. The launcher runs nested inside the runner's / terminal's own job, which does not affect the limits.
+
+**Fix (tests only, no sandbox change):** every memory-limit program now reads back each touched page and prints a checksum, so no compiler can remove the allocation. The original assertion is kept and the test additionally requires `REFUSED`. New regression tests: a 300 MB program succeeds with the exact checksum (proves the test really allocates), step-wise growth is stopped between 256 and 512 MB, and Python is refused at 900 MB. A mutation check (memory limit removed) makes all three limit tests fail locally.
+
 ## 3.1 — Final quality audit (2026-11-21, release candidate)
 
 ### Git
