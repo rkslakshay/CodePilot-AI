@@ -16,6 +16,7 @@ const Learning = lazy(() => import('./pages/Learning'));
 const Repos = lazy(() => import('./pages/Repos'));
 const RepoWorkspace = lazy(() => import('./pages/RepoWorkspace'));
 const Workspace = lazy(() => import('./pages/Workspace'));
+const UmlStudio = lazy(() => import('./pages/UmlStudio'));
 const History = lazy(() => import('./pages/History'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 
@@ -54,6 +55,8 @@ export const routes = [
       { path: 'learning', element: page(<Learning />) },
       { path: 'repos', element: page(<Repos />) },
       { path: 'repos/:id/:section?', element: page(<RepoWorkspace />) },
+      { path: 'uml', element: page(<UmlStudio />) },
+      { path: 'uml/:id', element: page(<UmlStudio />) },
       { path: 'workspace', element: page(<Workspace />) },
       { path: 'history', element: page(<History />) },
       { path: 'settings', element: page(<SettingsPage />) },

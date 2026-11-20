@@ -10,7 +10,7 @@
 
 ## 1. Introduction
 
-CodePilot AI generates, converts, explains, runs and debugs code in **C, C++, Java, Python and JavaScript**, analyses whole repositories, visualises algorithms step by step, and teaches data structures and algorithms with quizzes and revision.
+CodePilot AI generates, converts, explains, runs and debugs code in **C, C++, Java, Python and JavaScript**, analyses whole repositories, creates UML diagrams from descriptions, code or repositories, visualises algorithms step by step, and teaches data structures and algorithms with quizzes and revision.
 
 Everything runs on your own computer and costs nothing:
 
@@ -25,6 +25,7 @@ Everything runs on your own computer and costs nothing:
 |---|---|
 | **Code Intelligence** | AI Code Generator · Code Converter · Code Explainer · Compiler & Debugger |
 | **Repository Intelligence** | Repository Analyzer (code review, bugs, security, complexity, dependencies, technical debt, Git change review, reports) |
+| **Design Intelligence** | UML Studio (8 UML diagram types; generate from a description, source code or a repository; edit, validate, export) |
 | **Algorithm Intelligence** | Algorithm Studio (26 algorithms, visual dry runs, pseudocode, flowcharts) |
 | **Learning Intelligence** | Learning Hub (paths, lessons, viva, MCQ quizzes, practice, revision) |
 | Workspace | Dashboard · My Workspace (projects & files) · History · Settings · command palette (Ctrl+K) |
@@ -65,6 +66,20 @@ Import a local folder or a ZIP archive (for example GitHub's *Download ZIP*) and
 
 **Safety rules:** imported code is never executed; folders are read in place and never modified; ZIP archives are validated in full (no path traversal, absolute paths, links or encrypted entries; size and archive-bomb limits) before anything is unpacked; links are never followed; `.git`, `node_modules`, build output and `.gitignore`d files are skipped; `.env` files and keys are listed but never read, displayed, sent to the AI or put in reports; Git configuration that could run programs (hooks, filters, fsmonitor, external diff) is disabled for every Git call.
 
+## 4a. UML Studio (Design Intelligence)
+
+Professional UML diagrams — **class, use case, sequence, activity, state machine, component, deployment and object** — with real UML notation (visibility, abstract and static members, multiplicities, generalization / realization / aggregation / composition, «include» / «extend», activations and `alt / opt / loop` fragments, guards, fork / join and swimlanes, `event [guard] / effect`, provided / required interfaces, nested nodes and artifacts).
+
+- **Generate** from a description (optional local AI; otherwise a deterministic offline generator that understands a PlantUML-like notation and plain sentences, labelled as not AI), from **source code** (Tree-sitter: class, sequence and activity diagrams for Java, Python, TypeScript, JavaScript, C++, C) or from an **imported repository** (classes, module dependencies, architecture, deployment — refused when the repository holds no evidence).
+- **Edit** on a canvas with pan / zoom / grid, drag, connect, a properties inspector for every element, undo / redo, auto layout and live validation of UML rules. Evidence (file, line, extracted or inferred) is kept for generated elements.
+- **Save** locally and **export** SVG, PNG, PDF, PlantUML and Mermaid (class / sequence / state).
+
+| Editor | Sequence diagram (dark) |
+|---|---|
+| ![UML Studio editor](docs/screenshots/uml-editor.png) | ![Sequence diagram](docs/screenshots/uml-sequence-dark.png) |
+
+Full reference: [docs/UML_STUDIO.md](docs/UML_STUDIO.md).
+
 ## 5. Algorithm Intelligence
 
 **Algorithm Studio** — 26 algorithms (searching, sorting, graphs, recursion, dynamic programming, data structures, tree traversals) with steps, pseudocode, Mermaid flowcharts (SVG / PNG export), code in five languages and a dry-run visualiser that really executes the algorithm on your input (play / pause / step / speed). It also turns your own problem statement or code into an algorithm, pseudocode and a flowchart.
@@ -99,6 +114,7 @@ Browser (React SPA) ──/api──▶ Express API (127.0.0.1 only) ──▶ S
                                   ├──▶ Offline engine: lexer → parser → IR → emitters / analyser / views
                                   ├──▶ Tree-sitter structural analysis
                                   ├──▶ Repository Analyzer: scan → rules → deps → git (read-only) → AI review → reports
+                                  ├──▶ UML Studio: shared model / validation / layout / SVG renderer · NL (AI or rules) · Tree-sitter · repository evidence
                                   ├──▶ AI provider abstraction ──▶ Ollama (localhost, optional)
                                   └──▶ Executor ──▶ runner process ──▶ Windows sandbox ──▶ gcc / g++ / javac / python / node
 ```
@@ -106,16 +122,18 @@ Browser (React SPA) ──/api──▶ Express API (127.0.0.1 only) ──▶ S
 The API only listens on `127.0.0.1`, rejects foreign `Origin` and `Host` headers (DNS-rebinding protection) and sends a strict Content-Security-Policy. Details, the data model and every design decision are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```
-client/      React app (pages, components, Monaco, visualiser, Repository Analyzer UI)
+client/      React app (pages, components, Monaco, visualiser, Repository Analyzer UI, UML Studio)
+shared/uml/  UML model, validation, editing operations, layout, SVG renderer, PlantUML / Mermaid export (server + client)
 server/      Express API
   src/engine       parser, IR, type inference, emitters, analyser, Tree-sitter analysis, debugger
   src/repo         Repository Analyzer (zip, scan, detect, rules, deps, git, review, report, jobs)
+  src/uml          UML Studio generation (AI + offline rules, source code, repository) and persistence
   src/execution    runtime detection, static guard, runner process, Windows sandbox (C#)
   src/providers    AI provider abstraction + Ollama client
   src/content      algorithm library, tracers, templates, learning content
   tests/           Vitest + Supertest, real-compiler integration tests, live Ollama tests
 e2e/         Playwright journeys (throw-away database)
-docs/        rule catalogue and screenshots
+docs/        rule catalogue, UML Studio reference and screenshots
 ```
 
 ## 9. Screenshots
@@ -192,6 +210,16 @@ Then open **http://localhost:4317**. Code execution is **off by default** and is
 
 ## 14. Running tests
 
+Latest results on the 3.1 release candidate (Windows 11, Node 24, from a clean clone; details in [TEST_REPORT.md](TEST_REPORT.md)):
+
+| Suite | Result |
+|---|---|
+| Type checks (server + client) | 0 errors |
+| Server tests (Vitest + Supertest, excluding live AI) | 312 / 312 passed |
+| Client tests | 15 / 15 passed |
+| Playwright E2E in Microsoft Edge | 67 passed (2 on-demand screenshot generators skipped) |
+| Live local AI (`qwen2.5-coder:1.5b`) | 7 / 8 in the last run; the repository-review case is flaky because the small model sometimes returns malformed JSON (the app then falls back to labelled offline results) |
+
 ```bash
 npm test
 ```
@@ -222,6 +250,7 @@ With Ollama running, `npx vitest run tests/ollama-live.test.ts` (inside `server/
 - The offline converter handles procedural code plus classes, maps, sets and exceptions; inheritance, generics, lambdas and file I/O are left as marked comments with warnings.
 - Complexity is a static estimate with a confidence level; "unknown" is a valid answer.
 - Small local models are slow (≈30–60 s per review chunk for 1.5B) and can be wrong; AI findings stay low-confidence until you verify them.
+- UML Studio: small local models produce valid but sometimes incomplete diagrams; the offline generator only understands documented patterns; edge bend points cannot be edited; Mermaid export covers class / sequence / state only (see [docs/UML_STUDIO.md](docs/UML_STUDIO.md#12-limitations)).
 - Semgrep and ESLint are detected but not run (they would download rules from the internet or execute project configuration).
 - Developed and tested on Windows; other platforms run without the OS sandbox and are not regularly tested.
 
@@ -237,7 +266,7 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the full list.
 
 ## Documentation
 
-[ARCHITECTURE.md](ARCHITECTURE.md) · [FEATURE_TRACKER.md](FEATURE_TRACKER.md) · [PROJECT_STATUS.md](PROJECT_STATUS.md) · [TEST_REPORT.md](TEST_REPORT.md) · [CHANGELOG.md](CHANGELOG.md) · [docs/ANALYSIS_RULES.md](docs/ANALYSIS_RULES.md)
+[ARCHITECTURE.md](ARCHITECTURE.md) · [FEATURE_TRACKER.md](FEATURE_TRACKER.md) · [PROJECT_STATUS.md](PROJECT_STATUS.md) · [TEST_REPORT.md](TEST_REPORT.md) · [CHANGELOG.md](CHANGELOG.md) · [docs/ANALYSIS_RULES.md](docs/ANALYSIS_RULES.md) · [docs/UML_STUDIO.md](docs/UML_STUDIO.md)
 
 ## License
 

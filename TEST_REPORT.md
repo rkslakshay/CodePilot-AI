@@ -1,7 +1,84 @@
-# Test Report — CodePilot AI 3.0.0
+# Test Report — CodePilot AI 3.1.0 (release candidate)
 
-**Date:** 2026-11-20
+**Date:** 2026-11-21 (3.1 section); earlier sections 2026-11-20
 **Machine:** Windows 11 (16 GB RAM), Node.js 24.19.0, Git 2.55.0, GCC/G++ 6.3.0 (MinGW.org), Java 26.0.1, Python 3.13.3, Microsoft Edge (installed), Ollama with `qwen2.5-coder:1.5b`. Ruff, Bandit, Semgrep and ESLint are **not** installed.
+
+## 3.1 — Final quality audit (2026-11-21, release candidate)
+
+### Git
+`main` = `e6700ef` (unchanged). `feature/uml-studio` is based exactly on `e6700ef` (merge base) and holds the UML Studio commit `6447c40` plus the audit commit. Working tree clean before the audit; no databases, environment files, build output, test artefacts or models are tracked. The remote `origin` has no refs — nothing has been pushed.
+
+### Clean installation
+`git clone` of the branch into an empty folder → `npm ci --offline` (433 packages from the lockfile, 32 s, no network) → type checks, server tests, client tests, production build and the full E2E suite: **all green**. Production start (`npm start` in `server/` with `NODE_ENV=production`) served the built SPA, reported version **3.1.0** from `/api/health`, sent the CSP header, refused a foreign `Host` (421) and a foreign `Origin` (403).
+
+### Regression after the audit fixes (working tree)
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | 0 errors |
+| Server tests (`--exclude tests/ollama-live.test.ts`) — includes Repository Analyzer, database / migrations v1→v4, API, engine, execution, UML | **312 / 312 passed** |
+| Client tests | **15 / 15 passed** |
+| Production build | Success |
+| Playwright E2E (`npm run e2e`) | **67 passed**, 2 skipped (on-demand screenshot generators) |
+| Live AI suite (`tests/ollama-live.test.ts`, run alone) | **7 / 8** in the last run. The repository-review case failed because `qwen2.5-coder:1.5b` returned malformed JSON twice; the app showed labelled offline results as designed. Earlier the same day it passed alone (8 / 8) and once failed under CPU load. Classified as a flaky live test caused by model output variance; the AI review code is unchanged since 3.0. |
+| Live UML generation (all 8 types, run alone) | 8 / 8 valid, labelled *Local AI · qwen2.5-coder:1.5b*; unresolved references reported as warnings (use case, deployment). |
+
+### Feature smoke test
+The E2E suite exercises real user journeys in every module: Dashboard (demo data, continue-where-you-left-off, compiler availability — J18, J23), AI Code Generator (offline generation, save to workspace — J4, M2), Code Converter (Python → Java with semantic comparison — J5), Algorithm Studio (visualiser, pseudocode / flowchart — J6, J7, J24), Code Explainer (J8), Compiler & Debugger (consent, sandboxed run with stdin, error explanation and repair, guard, test cases — J9–J12), Learning Hub (quiz, revision, paths — J13, J21, J22), My Workspace (J14), History (J15), Settings (theme, AI status, backup — J16, J17, J19), Repository Analyzer (R1–R9, M3), UML Studio (U1–U19, M-UML). In addition, every module page was captured in light and dark themes at desktop (1440 × 900) and phone (Pixel 7) sizes against an isolated server with demo data, a sample repository and a saved diagram: no console errors, no page errors, no horizontal overflow; screenshots reviewed.
+
+### Security review
+| Area | Finding |
+|---|---|
+| Repository import / ZIP / paths / links | Unchanged since 3.0 and covered by the existing tests (traversal, absolute / UNC / device names, symlink and encrypted entries, archive bombs, validate-then-extract, junctions not followed). UML generation reads repository files only through `readRepoFile` (scanned files only, sensitive files refused, path confined to the repository root). |
+| Secrets and AI prompts | Descriptions are secret-redacted before prompting; source-code and repository generation never use AI. The Ollama URL is restricted to loopback in settings validation and in the provider, so text cannot be sent to another host. |
+| Diagram validation | Zod schema with length limits, 400 elements / 800 relationships / 60 fragments, 1 MB request body. **Fixed:** coordinates were only required to be finite — a crafted 10¹² px position reached the PDF renderer (500). Now bounded to ±1 000 000 (400 `invalid_diagram`); regression test added. |
+| SVG export / canvas | All text and attribute values pass through one escaping serializer. Hostile text (`<script>`, `foreignObject`, `onload`, `javascript:` links, CDATA / comment openers) in every free-text field of all 8 types produced only plain SVG shape / text elements when parsed by Edge's XML parser — no event-handler attributes, no links; payload visible only as text. A regression test tokenises the SVG and was mutation-checked (it fails when escaping is removed). |
+| PDF export | Local Edge / Chrome, 60 s timeout, network blocked via a dead proxy, HTML built only from the escaped SVG; filenames sanitised. |
+| PNG export | **Fixed (robustness):** failed for very wide diagrams (browser canvas limit 65 535 px per side); scale now reduced to fit; unit test added. |
+| File downloads, API validation, SQLite | Downloads are generated client-side or with sanitised `Content-Disposition`; all UML routes validate with Zod; SQL uses prepared statements with bound parameters (search uses an escaped `LIKE`). |
+| Git, compiler execution, local file access, CSP / host allowlist | Unchanged since 3.0 and covered by the existing tests (Git config neutralisation, sandbox enforcement, guarded data folder, DNS-rebinding protection, CSP). Sandbox limitation unchanged and documented: programs can read files the user can read and network access is not blocked. |
+
+## 3.1 — UML Studio regression (2026-11-21, branch `feature/uml-studio`)
+
+| Check | Command | Result |
+|---|---|---|
+| Type checking | `npm run typecheck` | **0 errors** (server + client, including `shared/uml`) |
+| Server, all suites except live AI | `npx vitest run --exclude tests/ollama-live.test.ts` in `server/` | **310 / 310 passed** (272 before 3.1 + 38 UML) |
+| Client | `npx vitest run` in `client/` | **14 / 14 passed** |
+| Production build | `npm run build -w client` | **Success** |
+| End-to-end (Playwright, Edge) | `npm run e2e` | **67 passed**, 2 skipped (the on-demand documentation-screenshot generators) |
+| Live local AI, existing suite | `npx vitest run tests/ollama-live.test.ts` | **8 / 8 passed** when run on its own. In one full parallel run the repository-review case failed with "AI unavailable" after 192 s under CPU contention; rerunning it alone passed (no code involved changed). |
+
+### UML server tests (`server/tests/uml.test.ts`, 38 tests)
+- **Model and validation:** all 8 examples valid, overlap-free and inside the canvas; lossless JSON round trip; structural errors with clear messages; duplicate ids, missing ends, wrong kinds, invalid ends, inheritance cycles and invalid containment detected; notation warnings (decision guards, missing initial node); `pruneInvalid` reports every removal.
+- **Editing:** add / update / delete with cascade (children and relationships); kind changes validated; manual positions kept by automatic placement and cleared only by a forced layout; message reordering; undo / redo semantics.
+- **Rendering and text:** notation present per type (stereotypes, italics, underline, diamonds, triangles, dashed lines, activations, fragments, fork bars, entry actions, sockets, execution environments, object headers); user text escaped; PlantUML for all 8 types; Mermaid only for class / sequence / state.
+- **Offline natural language:** the specification examples for every type, structured notation, inferred items marked, unusable text refused.
+- **Source code:** Java, Python (incl. quoted forward references), TypeScript generics, JavaScript, C++ pure virtual classes, C structs; sequence and activity extraction; refusal without classes / calls.
+- **API:** CRUD, rename, duplicate, delete, type-change refusal, validation, templates, offline generation and 422 refusal, inline source and function listing, repository class / module / architecture / deployment generation, refusal without evidence, repository link cleared (`ON DELETE SET NULL`) when a repository is removed, docker-compose parsing, PDF bytes.
+- **AI (stub Ollama):** valid answer labelled Local AI with prompt secrets redacted; one bounded semantic-repair round fixes undefined references; unresolved references reported; malformed output and an unreachable server fall back to the offline generator with a notice.
+- `tests/database.test.ts` now also checks that migration v4 creates `uml_diagrams`; the existing v1 → latest upgrade test applies v4 to an old database with data.
+
+### UML end-to-end journeys (`e2e/uml.spec.ts`, 19) and checks
+U1 navigation (sidebar, Dashboard) and accessible names · U2 all 8 examples render and validate · U3 manual class diagram with members, inheritance, save and reload · U4 drag with undo / redo · U5 cascade delete with undo · U6 invalid «include» flagged · U7 offline generation labelled not AI + regenerate · U8 offline generation of the other 7 types · U9 pasted code → class / sequence / activity · U10 Repository Analyzer → UML, save, repository filter, low-confidence deployment warning · U11 deployment refused without evidence · U12 My Workspace file → UML · U13 SVG / PNG / PDF / PlantUML / Mermaid downloads verified by content, Mermaid not offered for deployment · U14 rename / duplicate / delete / filter · U15 zoom / fit / reset / grid · U16 sequence message order, message kind, fragment add + undo · U17 state entry action and object slots · U18 dark palette · U19 unsaved-changes guard. UML Studio was added to the page checks (overflow, accessible names) and the phone checks, including the editor on a Pixel 7 viewport.
+
+### Live UML generation with `qwen2.5-coder:1.5b`
+
+| Type | Time | Result |
+|---|---|---|
+| Class | 46.7 s | valid; 5 classes, 4 relationships |
+| Use case | 19.2 s | valid after the repair round; 1 unresolved «include» target dropped and reported |
+| Sequence | 14.8 s | valid; 4 participants, 5 messages |
+| Activity | 16.7 s | valid; 8 nodes (the model named one decision "If Valid") |
+| State machine | 18.2 s | valid; 7 states / pseudostates |
+| Component | 12.3 s | valid; 5 components, 5 relationships |
+| Deployment | 19.0 s | valid after the repair round; nesting lost — 3 unresolved parents reported as warnings |
+| Object | 12.0 s | valid; 2 objects, 1 link |
+
+All results were labelled **Local AI · qwen2.5-coder:1.5b**. The small model's omissions are reported, not filled in.
+
+### Visual review
+Every example type was screenshotted in the editor in light and dark themes (headless Edge) and reviewed. Fixed during review: drafts lost under React StrictMode, toolbar wrapping at 1440 px, inspector visibility selects too narrow, unlabelled AI switch, ligature arrows in the notation hint, and buttons inside `<label>` rows that took the wrong accessible name.
 
 ## Pre-publication verification (2026-11-20, staged repository contents)
 

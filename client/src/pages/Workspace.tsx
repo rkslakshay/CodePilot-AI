@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Copy, Download, FilePlus2, FileCode2, FolderKanban, FolderPlus, MessageSquareCode, MoreHorizontal, Pencil, Play, Save, Search, Shuffle, Trash2, GitBranch } from 'lucide-react';
+import { Copy, Download, FilePlus2, FileCode2, FolderKanban, FolderPlus, MessageSquareCode, MoreHorizontal, Pencil, Play, Save, Search, Shuffle, Trash2, GitBranch, Shapes } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Badge, Button, Card, EmptyState, Field, IconButton, Input, PageHeader, Select, Skeleton, Textarea } from '@/components/ui/primitives';
 import { Dialog, Menu, MenuItem, confirmAction, toast } from '@/components/ui/overlay';
@@ -217,6 +217,7 @@ export default function Workspace() {
                               <MenuItem icon={Pencil} onClick={() => { close(); setFileDialog({ mode: 'rename', f }); }}>Rename</MenuItem>
                               <MenuItem icon={Copy} onClick={() => { close(); void duplicate(f); }}>Duplicate</MenuItem>
                               <MenuItem icon={Download} onClick={() => { close(); window.location.href = `/api/files/${f.id}/download`; }}>Download</MenuItem>
+                              <MenuItem icon={Shapes} onClick={() => { close(); nav(`/uml?generate=source&fileId=${f.id}`); }}>UML diagram</MenuItem>
                               <MenuItem icon={Trash2} danger onClick={() => { close(); void deleteFile(f); }}>Delete</MenuItem>
                             </>
                           )}
@@ -241,6 +242,7 @@ export default function Workspace() {
                     <Button size="xs" variant="ghost" icon={MessageSquareCode} onClick={() => handoff('explainer')}>Explain</Button>
                     <Button size="xs" variant="ghost" icon={Shuffle} onClick={() => handoff('converter')}>Convert</Button>
                     <Button size="xs" variant="ghost" icon={GitBranch} onClick={() => handoff('studio')}>Flowchart</Button>
+                    <Button size="xs" variant="ghost" icon={Shapes} title={dirty ? 'Save first: UML generation reads the saved file' : 'Generate a UML class, sequence or activity diagram from this file'} onClick={() => nav(`/uml?generate=source&fileId=${file.id}`)}>UML</Button>
                     <IconButton icon={Download} label="Download" size="icon-sm" onClick={() => downloadText(file.name, draft)} />
                     <Button size="sm" variant="primary" icon={Save} loading={saving} disabled={!dirty} onClick={save}>
                       Save

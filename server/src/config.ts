@@ -5,7 +5,7 @@ const serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const config = {
   appName: 'CodePilot AI',
-  version: '3.0.0',
+  version: '3.1.0',
   host: '127.0.0.1',
   port: Number(process.env.CODEPILOT_PORT ?? 4317),
   dbPath: process.env.CODEPILOT_DB ?? join(serverRoot, 'data', 'codepilot.db'),

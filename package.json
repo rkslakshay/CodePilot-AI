@@ -1,6 +1,6 @@
 {
   "name": "codepilot-ai",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "description": "CodePilot AI \u2014 Your AI-Powered Programming Companion",
   "workspaces": [
@@ -27,5 +27,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/rkslakshay/CodePilot-AI.git"
+  },
+  "dependencies": {
+    "dagre-d3-es": "7.0.14",
+    "zod": "^3.25.76"
   }
 }

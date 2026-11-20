@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { api } from './routes/index.js';
 import { repos } from './routes/repos.js';
+import { uml } from './routes/uml.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { config } from './config.js';
 import { log } from './utils/logger.js';
@@ -50,6 +51,7 @@ export function createApp() {
   });
 
   app.use('/api/repos', repos);
+  app.use('/api/uml', uml);
   app.use('/api', api);
   app.use('/api', notFoundHandler);
 

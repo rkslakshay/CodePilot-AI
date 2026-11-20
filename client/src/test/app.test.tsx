@@ -219,3 +219,17 @@ describe('components', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent(/local language model/);
   });
 });
+
+describe('UML PNG export sizing', () => {
+  it('uses 2x for normal diagrams and shrinks very large ones to fit browser canvas limits', async () => {
+    const { pngScale } = await import('@/lib/uml');
+    expect(pngScale(1200, 800)).toBe(2);
+    // 400 unconnected classes lay out about 84 000 px wide: 2x would exceed the 65 535 px canvas limit
+    const s = pngScale(84_020, 240);
+    expect(84_020 * s).toBeLessThanOrEqual(32_000);
+    expect(s).toBeGreaterThan(0.3);
+    // a huge square stays under the pixel-area limit
+    const q = pngScale(20_000, 20_000);
+    expect(20_000 * q * 20_000 * q).toBeLessThanOrEqual(120_000_000 + 1);
+  });
+});

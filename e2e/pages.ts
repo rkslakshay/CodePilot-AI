@@ -6,6 +6,7 @@ export const NAV_PAGES = [
   { path: '/explainer', label: 'Code Explainer', heading: 'Code Explainer' },
   { path: '/compiler', label: 'Compiler & Debugger', heading: 'Compiler & Debugger' },
   { path: '/repos', label: 'Repository Analyzer', heading: 'Repository Analyzer' },
+  { path: '/uml', label: 'UML Studio', heading: 'UML Studio' },
   { path: '/learning', label: 'Learning Hub', heading: 'Learning Hub' },
   { path: '/workspace', label: 'My Workspace', heading: 'My Workspace' },
   { path: '/history', label: 'History', heading: 'History' },

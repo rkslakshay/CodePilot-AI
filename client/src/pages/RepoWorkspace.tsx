@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate, useParams } from 'react-router';
-import { Activity, ArrowLeft, Bot, Bug, FileCode2, FileText, FolderGit2, Gauge, GitBranch, LayoutDashboard, ListChecks, Package, RefreshCw, ShieldAlert, Timer, Trash2, Wrench, type LucideIcon } from 'lucide-react';
+import { Activity, ArrowLeft, Bot, Bug, FileCode2, FileText, FolderGit2, Gauge, GitBranch, LayoutDashboard, ListChecks, Package, RefreshCw, Shapes, ShieldAlert, Timer, Trash2, Wrench, type LucideIcon } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Alert, Badge, Button, Card, EmptyState, Skeleton } from '@/components/ui/primitives';
 import { confirmAction, toast } from '@/components/ui/overlay';
@@ -252,6 +252,7 @@ function OverviewSection({ data }: { data: Overview }) {
           <Button icon={Wrench} onClick={() => nav(`/repos/${repo.id}/debt`)}>Technical debt</Button>
           {repo.isGit && <Button icon={GitBranch} onClick={() => nav(`/repos/${repo.id}/git`)}>Review Git changes</Button>}
           <Button icon={FileText} onClick={() => nav(`/repos/${repo.id}/reports`)}>Export report</Button>
+          <Button icon={Shapes} onClick={() => nav(`/uml?generate=repository&repoId=${repo.id}`)}>UML diagrams</Button>
         </div>
       </Panel>
     </div>

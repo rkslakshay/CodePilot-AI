@@ -1,8 +1,26 @@
 # Project Status
 
-**Version:** 3.0.0
-**Current phase:** 3.0 — Repository Analyzer delivered (phases A–L)
-**Last updated:** 2026-11-20
+**Version:** 3.1.0 release candidate (branch `feature/uml-studio`; not released)
+**Current phase:** 3.1 — release candidate (final quality audit done; scope frozen)
+**Last updated:** 2026-11-21
+
+## Completed work (3.1 — UML Studio)
+
+| Phase | Result |
+|---|---|
+| Core architecture | Shared `shared/uml` package: Zod model for 8 diagram types, semantic validation, editing operations with bounded undo history, auto layout, custom SVG renderer (light / dark), PlantUML + Mermaid exporters, examples. Renderer evaluation (Mermaid / PlantUML / elkjs / custom) in `docs/UML_STUDIO.md`. Migration v4 (`uml_diagrams`), CRUD API. |
+| Generation | Natural language with optional local AI (contracts, validation, repair, semantic repair, honest fallback) and an offline rule engine; source code via Tree-sitter (class / sequence / activity, 6 languages); repository evidence (classes, modules, architecture, deployment) with refusal when evidence is missing. |
+| Interface | Home (types, examples, saved diagrams), editor with canvas, palette, outline, inspector, toolbar, validation panel, generation dialog, exports; responsive; both themes. |
+| Integration | Sidebar, Dashboard tile, My Workspace file actions, Repository Analyzer quick action; diagrams linked to repositories. |
+| Testing | 40 server tests + migration check, 19 E2E journeys + page / phone checks, live model run for all 8 types, visual review of every type in both themes. |
+
+### Known limitations (3.1)
+
+- `qwen2.5-coder:1.5b` returns valid diagrams for all 8 types but can omit elements, lose deployment nesting or mislabel a decision; unresolved references are dropped and listed as warnings.
+- The offline generator recognises the documented notation and sentence patterns only.
+- Edges cannot be bent by hand; no multi-select / copy-paste; participants are reordered in the inspector, not dragged.
+- Not modelled: history / junction pseudostates, orthogonal regions, object nodes, extension points, delegation connectors, other UML diagram types (package, communication, timing…).
+- Mermaid export only for class, sequence and state diagrams (Mermaid has no notation for the others). PDF export needs Edge or Chrome.
 
 ## Completed work (3.0 — Repository Intelligence)
 
@@ -47,7 +65,14 @@
 
 ## Current work
 
-None. Ready for owner review.
+None. 3.1 is a release candidate on `feature/uml-studio` (not merged into `main`, nothing pushed, no release published) awaiting the owner's approval.
+
+### Final quality audit (2026-11-21)
+
+- Clean clone + `npm ci --offline` from the lockfile, then type checks, all server / client tests, production build and the complete E2E suite — all green; production start verified (version 3.1.0, Host / Origin protection, CSP).
+- Every module checked in light and dark themes at desktop and phone sizes (no console errors, no horizontal overflow).
+- Security review of import, ZIP, paths, links, secrets, AI prompts, diagram validation, SVG / PDF / file exports, API validation, SQLite, Git, execution and CSP. Two defects fixed with regression tests: PNG export failed for very wide diagrams (browser canvas limit), and nonsensical coordinates reached the PDF renderer (now a validation error). Details in TEST_REPORT.md.
+- Known flaky test: the live repository-review test (real model) occasionally fails when `qwen2.5-coder:1.5b` returns malformed JSON twice or responds slowly under load; the app then correctly shows labelled offline results. Not a code regression (the AI review code is unchanged since 3.0).
 
 ## Known issues and limitations
 

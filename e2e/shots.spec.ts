@@ -71,3 +71,41 @@ test('documentation screenshots', async ({ page, request }) => {
   await page.screenshot({ path: 'docs/screenshots/learning-hub.png' });
   await request.post('/api/demo/clear');
 });
+
+// UML Studio documentation screenshots (CP_SHOTS=1 npx playwright test e2e/shots.spec.ts --project=desktop -g UML)
+test('UML documentation screenshots', async ({ page, request }) => {
+  test.skip(!process.env.CP_SHOTS, 'set CP_SHOTS=1 to regenerate docs/screenshots');
+  test.setTimeout(180_000);
+  mkdirSync('docs/screenshots/uml', { recursive: true });
+  const example = async (label: string) => {
+    await page.goto('/uml');
+    await page.getByRole('button', { name: `Example ${label} diagram` }).click();
+    await page.getByTestId('uml-canvas').locator('[data-el]').first().waitFor();
+    await page.waitForTimeout(500);
+  };
+  // every diagram type, light theme, canvas only
+  await request.put('/api/settings', { data: { theme: 'light' } });
+  const types: [string, string][] = [['class', 'Class'], ['usecase', 'Use case'], ['sequence', 'Sequence'], ['activity', 'Activity'], ['state', 'State machine'], ['component', 'Component'], ['deployment', 'Deployment'], ['object', 'Object']];
+  for (const [slug, label] of types) {
+    await example(label);
+    await page.getByTestId('uml-canvas').screenshot({ path: `docs/screenshots/uml/${slug}.png` });
+  }
+  await page.goto('/uml');
+  await page.waitForLoadState('networkidle');
+  await page.screenshot({ path: 'docs/screenshots/uml-home.png' });
+  // editor with a selected class (inspector), light
+  await example('Class');
+  await page.getByTestId('uml-canvas').locator('[data-el="Student"]').click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'docs/screenshots/uml-editor.png' });
+  // dark theme sequence with fragments
+  await request.put('/api/settings', { data: { theme: 'dark' } });
+  await example('Sequence');
+  await page.screenshot({ path: 'docs/screenshots/uml-sequence-dark.png' });
+  // generation dialog
+  await page.getByRole('button', { name: 'Generate', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Use an example' }).click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'docs/screenshots/uml-generate.png' });
+  await request.put('/api/settings', { data: { theme: 'light' } });
+});
