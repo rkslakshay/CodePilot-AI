@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0 — UML Studio (development version, not released)
+## 3.1.0 — UML Studio (release candidate, not released)
 
 A new module for professional UML diagrams. Everything from 3.0 is preserved; existing databases upgrade automatically (migration v4 only adds the `uml_diagrams` table). No new runtime, AI model or paid service; one existing MIT dependency (`dagre-d3-es`, already installed through Mermaid) is now declared directly.
 
@@ -16,8 +16,13 @@ A new module for professional UML diagrams. Everything from 3.0 is preserved; ex
 - **Entry points:** sidebar, Dashboard tile, My Workspace (file toolbar **UML** and file menu), Repository Analyzer quick action.
 - Docs: `docs/UML_STUDIO.md` (types, notation, generation modes, rendering, exports, offline behaviour, limitations) and screenshots in `docs/screenshots/uml/`.
 
+### Fixed during the final audit
+- PNG export failed ("PNG encoding failed") for diagrams wider than about 32 000 px at 2× (for example 130+ loosely connected classes): the raster scale is now reduced to stay within browser canvas limits.
+- Diagram coordinates are bounded to ±1 000 000 px, so a nonsensical position is rejected as an invalid diagram (400) instead of failing in the PDF renderer (500). Dragging clamps to the same range.
+- Regression tests: SVG injection through every free-text field of every diagram type, coordinate bounds, PNG scale.
+
 ### Tests
-- 38 new server tests (`tests/uml.test.ts`) including a stub-Ollama AI suite; migration check extended; 19 Playwright journeys (`e2e/uml.spec.ts`) plus UML Studio in the page and phone checks; live run with `qwen2.5-coder:1.5b` for all 8 types.
+- 40 new server tests (`tests/uml.test.ts`) including a stub-Ollama AI suite; migration check extended; 19 Playwright journeys (`e2e/uml.spec.ts`) plus UML Studio in the page and phone checks; live run with `qwen2.5-coder:1.5b` for all 8 types.
 
 ## Unreleased — repository publication
 

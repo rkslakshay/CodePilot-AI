@@ -117,7 +117,10 @@ export const EvidenceSchema = z.object({
 });
 export type Evidence = z.infer<typeof EvidenceSchema>;
 
-const point = z.object({ x: z.number().finite(), y: z.number().finite() });
+/** Canvas coordinates; far beyond any real layout (400 elements in one row is < 100 000 px). */
+export const MAX_COORD = 1_000_000;
+const coord = z.number().finite().min(-MAX_COORD).max(MAX_COORD);
+const point = z.object({ x: coord, y: coord });
 export const GenerationSchema = z.object({
   method: z.enum(['ai', 'rules', 'source', 'repository', 'manual', 'template']),
   label: z.string().max(200),

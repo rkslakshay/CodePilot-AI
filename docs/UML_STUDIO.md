@@ -115,7 +115,7 @@ Diagrams are stored in the local SQLite database (table `uml_diagrams`, migratio
 | Format | How |
 |---|---|
 | **SVG** | vector, light theme, generated in the browser from the model |
-| **PNG** | the SVG rasterised in the browser at 2× resolution on a white background |
+| **PNG** | the SVG rasterised in the browser at 2× resolution on a white background; very large diagrams (wider or taller than 16 000 px) are rasterised at a lower scale so they stay within browser canvas limits |
 | **PDF** | vector, one page sized to the diagram, rendered by the local server with the installed Microsoft Edge / Chrome (offline) |
 | **PlantUML** (`.puml`, or copy) | source for all 8 types |
 | **Mermaid** (`.mmd`, or copy) | only for class, sequence and state diagrams — Mermaid has no notation for the other types, so it is not offered there |
@@ -185,7 +185,7 @@ The same renderer runs in Node (validation, PDF) and in the browser (canvas, SVG
 
 ## 11. Testing
 
-- `server/tests/uml.test.ts` (38 tests): templates valid and overlap-free inside the canvas; lossless serialisation; structural and notation errors; editing operations with cascade delete; manual positions preserved by auto layout; message reordering; undo / redo; notation in the rendered SVG per type; escaping; PlantUML / Mermaid output; offline NL generation for every type (including the specification examples) and refusal of unusable text; Tree-sitter extraction for Java, Python, TypeScript, JavaScript, C++ and C; sequence and activity extraction; CRUD, rename, duplicate, delete, type-change refusal; repository class / module / architecture / deployment generation and refusal without evidence; docker-compose parsing; PDF export; AI generation through a stub Ollama (valid answer, secret redaction, semantic repair round, unresolved references reported, malformed output → offline fallback, unreachable server → offline fallback).
+- `server/tests/uml.test.ts` (40 tests): templates valid and overlap-free inside the canvas; lossless serialisation; structural and notation errors; editing operations with cascade delete; manual positions preserved by auto layout; message reordering; undo / redo; notation in the rendered SVG per type; escaping, including hostile text in every free-text field of every type (only plain SVG shape / text elements are produced, never scripts, `foreignObject`, links or event handlers); coordinate bounds; PlantUML / Mermaid output; offline NL generation for every type (including the specification examples) and refusal of unusable text; Tree-sitter extraction for Java, Python, TypeScript, JavaScript, C++ and C; sequence and activity extraction; CRUD, rename, duplicate, delete, type-change refusal; repository class / module / architecture / deployment generation and refusal without evidence; docker-compose parsing; PDF export; AI generation through a stub Ollama (valid answer, secret redaction, semantic repair round, unresolved references reported, malformed output → offline fallback, unreachable server → offline fallback).
 - `e2e/uml.spec.ts` (19 Playwright journeys in Edge) plus UML Studio in the page and phone checks: navigation and entry points, all 8 examples, manual class diagram with members, connection and save / reload, drag with undo / redo, cascading delete with undo, validation errors, offline generation for every type with honest labels and regenerate, source → class / sequence / activity, Repository Analyzer → UML, refusal without deployment evidence, My Workspace file → UML, SVG / PNG / PDF / PlantUML / Mermaid downloads, saved-diagram management, zoom / fit / reset / grid, sequence editing and fragments, state and object properties, dark theme, unsaved-changes guard, phone layout without horizontal overflow.
 - A live check with `qwen2.5-coder:1.5b` generated all 8 types (see [TEST_REPORT.md](../TEST_REPORT.md)).
 
@@ -200,3 +200,4 @@ The same renderer runs in Node (validation, PDF) and in the browser (canvas, SVG
 - Repository module diagrams group by folder depth (max 18 modules); architecture and deployment diagrams depend on manifests and container files and say when hosting is generic.
 - PDF export needs Microsoft Edge or Google Chrome installed (it is on every Windows 10 / 11 machine); SVG / PNG export uses system fonts.
 - Mermaid export is limited to class, sequence and state diagrams.
+- Positions are limited to ±1 000 000 px (far beyond any real layout); very large diagrams export to PNG at reduced resolution.

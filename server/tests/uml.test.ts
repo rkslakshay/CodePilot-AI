@@ -181,6 +181,35 @@ describe('UML rendering and text exports', () => {
     const r = render(autoLayout(d), { selected: ['x'] });
     expect(serialize(r.tree)).toContain('uml-selection');
   });
+  it('never lets diagram text become markup, in any field of any diagram type (SVG injection)', () => {
+    const P = '"><script>x</script><foreignObject onload="y"><a href="javascript:z">&amp;]]><!--';
+    const TEXT = new Set(['name', 'label', 'title', 'stereotype', 'note', 'guard', 'event', 'action', 'className', 'value', 'type', 'returnType', 'defaultValue', 'description', 'entry', 'exit', 'doActivity', 'sourceRole', 'targetRole', 'sourceMultiplicity', 'targetMultiplicity']);
+    const val = (k: string) => (k.endsWith('Multiplicity') ? P.slice(0, 20) : P.slice(0, 58));
+    const poison = (v: any): any => (Array.isArray(v) ? v.map(poison) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, TEXT.has(k) && typeof x === 'string' ? val(k) : poison(x)])) : v);
+    const ALLOWED = new Set(['svg', 'defs', 'marker', 'path', 'rect', 'g', 'text', 'title', 'line', 'circle', 'ellipse', 'polygon', 'polyline', 'tspan']);
+    for (const t of DIAGRAM_TYPES) {
+      const d0 = template(t);
+      const d = parseDiagram({ ...d0, title: val('title'), elements: poison(d0.elements), relationships: poison(d0.relationships), fragments: d0.fragments.map((f) => ({ ...f, operands: f.operands.map((o) => ({ ...o, guard: val('guard') })) })) });
+      const svg = toSvg(d).svg.replace(/^<\?xml[^>]*>\s*/, '');
+      // tokenise: every tag must be a known SVG element whose attributes are name="value" pairs with no raw quotes or angle brackets inside
+      const rest = svg.replace(/<\/?([a-zA-Z]+)((?:\s[\w:-]+="[^"<>]*")*)\s*\/?>/g, (_m, tag: string, attrs: string) => {
+        expect(ALLOWED.has(tag), `${t}: <${tag}>`).toBe(true);
+        for (const [, name] of attrs.matchAll(/\s([\w:-]+)="[^"]*"/g)) expect(name, t).not.toMatch(/^(on|href|xlink:href|style)/i);
+        return '';
+      });
+      expect(rest, t).not.toMatch(/[<>]/); // nothing left that a parser could read as markup
+      expect(svg).toContain('&lt;script&gt;');
+    }
+  });
+  it('bounds coordinates: nonsensical positions are a validation error, not a broken export', async () => {
+    const d = template('class');
+    const bad = { ...d, layout: { ...d.layout, positions: { ...d.layout.positions, Person: { x: 1e12, y: 1e12 } } } };
+    expect(safeParseDiagram(bad).ok).toBe(false);
+    const r = await request(app).post('/api/uml/export/pdf').send({ model: bad, name: 'x' });
+    expect(r.status).toBe(400);
+    expect(r.body.error.code).toBe('invalid_diagram');
+    expect(moveElement(d, 'Person', 5e9, -5e9).layout.positions.Person).toEqual({ x: 1_000_000, y: -1_000_000 });
+  });
   it('keeps labels inside element boxes (no clipping)', () => {
     const d = template('class');
     const g = geometry(d);

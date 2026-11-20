@@ -8,7 +8,7 @@ Status legend:
 
 | Area | Feature | Status |
 |---|---|---|
-| Shell | Sidebar with 11 modules, collapse / expand, mobile drawer | E2E (desktop + phone) |
+| Shell | Sidebar with 12 modules, collapse / expand, mobile drawer | E2E (desktop + phone) |
 | Shell | Top bar: page title, command search (Ctrl+K), theme toggle, workspace menu, AI status pill | E2E |
 | Shell | Dark / light / system theme, 4 accent colours | E2E (light persists after reload), Verified (screenshots) |
 | Shell | Toasts, confirm dialogs, empty / loading / error states, 404 page, route error boundary | Tested, E2E (404) |

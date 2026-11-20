@@ -1,5 +1,5 @@
 /** Pure editing operations on a diagram (every operation returns a new diagram). */
-import { DIAGRAM_TYPES, ELEMENT_KINDS, RELATIONSHIP_KINDS, ElementSchema, RelationshipSchema, type Diagram, type DiagramElement, type DiagramType, type ElementKind, type Relationship, type RelationshipKind } from './model.js';
+import { MAX_COORD, DIAGRAM_TYPES, ELEMENT_KINDS, RELATIONSHIP_KINDS, ElementSchema, RelationshipSchema, type Diagram, type DiagramElement, type DiagramType, type ElementKind, type Relationship, type RelationshipKind } from './model.js';
 
 let counter = 0;
 /** Unique, readable id (`cls_3_lx9k`). */
@@ -105,7 +105,8 @@ export function moveMessage(d: Diagram, id: string, delta: -1 | 1): Diagram {
 
 /** Records a user-chosen position (kept by auto layout until "re-layout everything"). */
 export function moveElement(d: Diagram, id: string, x: number, y: number): Diagram {
-  return { ...d, layout: { ...d.layout, positions: { ...d.layout.positions, [id]: { x: Math.round(x), y: Math.round(y) } }, manual: d.layout.manual.includes(id) ? d.layout.manual : [...d.layout.manual, id] } };
+  const c = (v: number) => Math.max(-MAX_COORD, Math.min(MAX_COORD, Math.round(v)));
+  return { ...d, layout: { ...d.layout, positions: { ...d.layout.positions, [id]: { x: c(x), y: c(y) } }, manual: d.layout.manual.includes(id) ? d.layout.manual : [...d.layout.manual, id] } };
 }
 
 /** Bounded undo / redo history of diagram snapshots. */

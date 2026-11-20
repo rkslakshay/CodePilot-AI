@@ -59,8 +59,20 @@ export function exportSvg(d: Diagram, name: string) {
 }
 
 /** Rasterises the light-theme SVG in the browser (no server, no network). */
-export async function svgToPng(d: Diagram, scale = 2): Promise<Blob> {
+/**
+ * Raster scale for PNG export: 2× by default, reduced when the image would exceed browser canvas limits
+ * (Chromium / Edge: at most 65 535 px per side and about 268 million pixels), so very large diagrams
+ * still export, at a lower resolution, instead of failing.
+ */
+export function pngScale(width: number, height: number, preferred = 2): number {
+  const MAX_SIDE = 32_000;
+  const MAX_AREA = 120_000_000;
+  return Math.min(preferred, MAX_SIDE / Math.max(1, width), MAX_SIDE / Math.max(1, height), Math.sqrt(MAX_AREA / Math.max(1, width * height)));
+}
+
+export async function svgToPng(d: Diagram, preferred = 2): Promise<Blob> {
   const { svg, width, height } = toSvg(d);
+  const scale = pngScale(width, height, preferred);
   const img = new Image();
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
   try {
