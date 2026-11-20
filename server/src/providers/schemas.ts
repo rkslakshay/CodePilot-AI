@@ -110,3 +110,6 @@ export const REVIEW = {
   answer: obj({ answer: str(6000), files: arr(str(400), 10) }),
   diff: obj({ purpose: str(2000), impact: str(2000), risks: arr(obj({ title: str(200), detail: str(1500), severity: sev }), 10), testSuggestions: arr(str(500), 10) }),
 };
+
+/** Field builders (JSON schema + Zod) reused by other features, e.g. UML Studio. */
+export const fields = { str, int, enm, arr, obj };

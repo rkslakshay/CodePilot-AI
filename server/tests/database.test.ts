@@ -17,7 +17,7 @@ describe('SQLite persistence', () => {
   it('creates the schema through migrations', () => {
     openDatabase(file);
     const tables = (getDb().prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[]).map((t) => t.name);
-    for (const t of ['profiles', 'settings', 'projects', 'code_files', 'history', 'saved_algorithms', 'learning_progress', 'saved_questions', 'practice_attempts', 'quiz_answers', 'repositories', 'repo_files', 'repo_findings', 'repo_dependencies', 'repo_reviews', 'repo_events', 'schema_migrations']) expect(tables).toContain(t);
+    for (const t of ['profiles', 'settings', 'projects', 'code_files', 'history', 'saved_algorithms', 'learning_progress', 'saved_questions', 'practice_attempts', 'quiz_answers', 'repositories', 'repo_files', 'repo_findings', 'repo_dependencies', 'repo_reviews', 'repo_events', 'uml_diagrams', 'schema_migrations']) expect(tables).toContain(t);
     expect((getDb().prepare('PRAGMA foreign_keys').get() as { foreign_keys: number }).foreign_keys).toBe(1);
   });
 

@@ -249,4 +249,26 @@ CREATE TABLE repo_events (
 CREATE INDEX idx_repo_events ON repo_events(repo_id, id DESC);
 `,
   },
+  {
+    version: 4,
+    name: 'uml studio diagrams',
+    sql: `
+CREATE TABLE uml_diagrams (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 200),
+  type TEXT NOT NULL CHECK (type IN ('class','usecase','sequence','activity','state','component','deployment','object')),
+  model TEXT NOT NULL,
+  renderer TEXT NOT NULL DEFAULT 'codepilot-svg',
+  generation TEXT NOT NULL DEFAULT 'manual' CHECK (generation IN ('ai','rules','source','repository','manual','template')),
+  repo_id INTEGER REFERENCES repositories(id) ON DELETE SET NULL,
+  project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+  source_path TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_uml_profile ON uml_diagrams(profile_id, updated_at DESC);
+CREATE INDEX idx_uml_repo ON uml_diagrams(repo_id);
+`,
+  },
 ];

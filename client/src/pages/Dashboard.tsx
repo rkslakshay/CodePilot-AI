@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Activity, BookOpen, Bug, Code2, Database, FileCode2, FolderKanban, GitBranch, MessageSquareCode, PlayCircle, Shuffle, Sparkles, Trash2, TrendingUp, Trophy, Bot, Cpu, ArrowRight, History, CheckCircle2, XCircle } from 'lucide-react';
+import { Activity, BookOpen, Bug, Code2, Database, FileCode2, FolderKanban, GitBranch, MessageSquareCode, PlayCircle, Shuffle, Sparkles, Trash2, TrendingUp, Trophy, Bot, Cpu, ArrowRight, History, CheckCircle2, XCircle, Shapes } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Badge, Button, Card, CardHeader, EmptyState, Skeleton, Stat, Alert } from '@/components/ui/primitives';
 import { confirmAction, toast } from '@/components/ui/overlay';
@@ -47,6 +47,7 @@ const TOOLS = [
   { to: '/studio', label: 'Algorithm Studio', icon: GitBranch, desc: 'Flowcharts & visual dry runs', tone: 'from-secondary/25' },
   { to: '/explainer', label: 'Code Explainer', icon: MessageSquareCode, desc: 'Line-by-line understanding', tone: 'from-warning/25' },
   { to: '/compiler', label: 'Compiler & Debugger', icon: Bug, desc: 'Run, test and fix locally', tone: 'from-danger/25' },
+  { to: '/uml', label: 'UML Studio', icon: Shapes, desc: '8 UML diagram types, offline', tone: 'from-info/25' },
   { to: '/learning', label: 'Learning Hub', icon: BookOpen, desc: 'Viva, MCQs, practice', tone: 'from-primary/25' },
 ];
 
@@ -123,7 +124,7 @@ export default function Dashboard() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
         {TOOLS.map((tl) => (
           <Link key={tl.to} to={tl.to} className="group">
             <Card className={cn('h-full bg-gradient-to-br to-transparent p-4 transition-all group-hover:-translate-y-0.5 group-hover:border-border-strong', tl.tone)}>

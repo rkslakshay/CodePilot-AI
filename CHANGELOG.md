@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.1.0 — UML Studio (development version, not released)
+
+A new module for professional UML diagrams. Everything from 3.0 is preserved; existing databases upgrade automatically (migration v4 only adds the `uml_diagrams` table). No new runtime, AI model or paid service; one existing MIT dependency (`dagre-d3-es`, already installed through Mermaid) is now declared directly.
+
+### Added — UML Studio
+- **8 diagram types with UML notation:** class, use case, sequence, activity, state machine, component, deployment and object diagrams, with an example and a blank start for each.
+- **Structured, renderer-independent model** shared by server and client (`shared/uml`): Zod schemas, semantic validation (allowed kinds and ends per type, containment, cycles, notation rules), editing operations, auto layout (dagre plus containment, swimlane, use-case and sequence layouts), a custom SVG renderer with light and dark palettes, PlantUML and Mermaid exporters.
+- **Generation from a description:** optional local AI (Ollama) with per-type JSON contracts, Zod validation, one repair retry and one bounded semantic-repair round, unresolved references reported as warnings, secret redaction; deterministic offline generator (structured PlantUML-like notation and sentence patterns) used when AI is off or fails — labelled as not AI, and it refuses text it cannot use instead of inventing a diagram.
+- **Generation from source code** (Tree-sitter; Java, Python, TypeScript / TSX, JavaScript, C++, C): class diagrams with members, visibility, supertypes, associations with multiplicities, inferred compositions and dependencies; sequence diagrams of one method's calls with fragments; activity diagrams of one function's control flow. Evidence (file, line, extracted vs inferred) for every element and relationship.
+- **Generation from an imported repository:** class diagram, module dependency diagram, architecture component diagram and deployment diagram from docker-compose / Dockerfiles / frameworks — refused with an explanation when the repository holds no evidence.
+- **Editor:** pan / zoom / fit / reset / grid, selection, dragging (containers move their contents; manual positions are preserved), add elements and connect relationships, properties inspector for every element and relationship kind (members, operations, slots, guards, events, message order, combined fragments), outline, undo / redo (Ctrl+Z / Ctrl+Y), delete with cascade, auto layout, live validation with issue list, regenerate, unsaved-changes guard, keyboard shortcuts.
+- **Exports:** SVG, PNG (2×), vector PDF (local Edge / Chrome), PlantUML for all types, Mermaid for class / sequence / state.
+- **Persistence:** save, open, rename, duplicate, delete, search and filter; diagrams can be linked to a repository or project.
+- **Entry points:** sidebar, Dashboard tile, My Workspace (file toolbar **UML** and file menu), Repository Analyzer quick action.
+- Docs: `docs/UML_STUDIO.md` (types, notation, generation modes, rendering, exports, offline behaviour, limitations) and screenshots in `docs/screenshots/uml/`.
+
+### Tests
+- 38 new server tests (`tests/uml.test.ts`) including a stub-Ollama AI suite; migration check extended; 19 Playwright journeys (`e2e/uml.spec.ts`) plus UML Studio in the page and phone checks; live run with `qwen2.5-coder:1.5b` for all 8 types.
+
 ## Unreleased — repository publication
 
 - MIT `LICENSE`, GitHub Actions CI (type check, server + client tests, build, Playwright E2E on a free Windows runner; no AI model downloaded), issue templates, `.gitattributes`, hardened `.gitignore` (local database, secrets, model files, test output, local tool config).

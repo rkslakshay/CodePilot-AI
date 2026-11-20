@@ -33,3 +33,11 @@ test('M3 · phone: repository overview and findings fit the screen', async ({ pa
     await expectNoOverflow(page);
   }
 });
+
+test('M-UML · phone: UML Studio editor fits the screen', async ({ page }) => {
+  await page.goto('/uml');
+  await page.getByRole('button', { name: 'Example Class diagram' }).click();
+  await expect(page.getByTestId('uml-canvas').locator('[data-el]').first()).toBeVisible();
+  await expectNoOverflow(page);
+  await expectAccessibleControls(page);
+});

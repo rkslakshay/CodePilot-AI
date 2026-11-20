@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -9,9 +11,15 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "noUnusedLocals": false,
     "allowImportingTsExtensions": false
   },
-  "include": ["src", "tests"]
+  "include": [
+    "src",
+    "tests",
+    "../shared"
+  ]
 }

@@ -1,7 +1,49 @@
-# Test Report — CodePilot AI 3.0.0
+# Test Report — CodePilot AI 3.1.0 (UML Studio)
 
-**Date:** 2026-11-20
+**Date:** 2026-11-21 (3.1 section); earlier sections 2026-11-20
 **Machine:** Windows 11 (16 GB RAM), Node.js 24.19.0, Git 2.55.0, GCC/G++ 6.3.0 (MinGW.org), Java 26.0.1, Python 3.13.3, Microsoft Edge (installed), Ollama with `qwen2.5-coder:1.5b`. Ruff, Bandit, Semgrep and ESLint are **not** installed.
+
+## 3.1 — UML Studio regression (2026-11-21, branch `feature/uml-studio`)
+
+| Check | Command | Result |
+|---|---|---|
+| Type checking | `npm run typecheck` | **0 errors** (server + client, including `shared/uml`) |
+| Server, all suites except live AI | `npx vitest run --exclude tests/ollama-live.test.ts` in `server/` | **310 / 310 passed** (272 before 3.1 + 38 UML) |
+| Client | `npx vitest run` in `client/` | **14 / 14 passed** |
+| Production build | `npm run build -w client` | **Success** |
+| End-to-end (Playwright, Edge) | `npm run e2e` | **67 passed**, 2 skipped (the on-demand documentation-screenshot generators) |
+| Live local AI, existing suite | `npx vitest run tests/ollama-live.test.ts` | **8 / 8 passed** when run on its own. In one full parallel run the repository-review case failed with "AI unavailable" after 192 s under CPU contention; rerunning it alone passed (no code involved changed). |
+
+### UML server tests (`server/tests/uml.test.ts`, 38 tests)
+- **Model and validation:** all 8 examples valid, overlap-free and inside the canvas; lossless JSON round trip; structural errors with clear messages; duplicate ids, missing ends, wrong kinds, invalid ends, inheritance cycles and invalid containment detected; notation warnings (decision guards, missing initial node); `pruneInvalid` reports every removal.
+- **Editing:** add / update / delete with cascade (children and relationships); kind changes validated; manual positions kept by automatic placement and cleared only by a forced layout; message reordering; undo / redo semantics.
+- **Rendering and text:** notation present per type (stereotypes, italics, underline, diamonds, triangles, dashed lines, activations, fragments, fork bars, entry actions, sockets, execution environments, object headers); user text escaped; PlantUML for all 8 types; Mermaid only for class / sequence / state.
+- **Offline natural language:** the specification examples for every type, structured notation, inferred items marked, unusable text refused.
+- **Source code:** Java, Python (incl. quoted forward references), TypeScript generics, JavaScript, C++ pure virtual classes, C structs; sequence and activity extraction; refusal without classes / calls.
+- **API:** CRUD, rename, duplicate, delete, type-change refusal, validation, templates, offline generation and 422 refusal, inline source and function listing, repository class / module / architecture / deployment generation, refusal without evidence, repository link cleared (`ON DELETE SET NULL`) when a repository is removed, docker-compose parsing, PDF bytes.
+- **AI (stub Ollama):** valid answer labelled Local AI with prompt secrets redacted; one bounded semantic-repair round fixes undefined references; unresolved references reported; malformed output and an unreachable server fall back to the offline generator with a notice.
+- `tests/database.test.ts` now also checks that migration v4 creates `uml_diagrams`; the existing v1 → latest upgrade test applies v4 to an old database with data.
+
+### UML end-to-end journeys (`e2e/uml.spec.ts`, 19) and checks
+U1 navigation (sidebar, Dashboard) and accessible names · U2 all 8 examples render and validate · U3 manual class diagram with members, inheritance, save and reload · U4 drag with undo / redo · U5 cascade delete with undo · U6 invalid «include» flagged · U7 offline generation labelled not AI + regenerate · U8 offline generation of the other 7 types · U9 pasted code → class / sequence / activity · U10 Repository Analyzer → UML, save, repository filter, low-confidence deployment warning · U11 deployment refused without evidence · U12 My Workspace file → UML · U13 SVG / PNG / PDF / PlantUML / Mermaid downloads verified by content, Mermaid not offered for deployment · U14 rename / duplicate / delete / filter · U15 zoom / fit / reset / grid · U16 sequence message order, message kind, fragment add + undo · U17 state entry action and object slots · U18 dark palette · U19 unsaved-changes guard. UML Studio was added to the page checks (overflow, accessible names) and the phone checks, including the editor on a Pixel 7 viewport.
+
+### Live UML generation with `qwen2.5-coder:1.5b`
+
+| Type | Time | Result |
+|---|---|---|
+| Class | 46.7 s | valid; 5 classes, 4 relationships |
+| Use case | 19.2 s | valid after the repair round; 1 unresolved «include» target dropped and reported |
+| Sequence | 14.8 s | valid; 4 participants, 5 messages |
+| Activity | 16.7 s | valid; 8 nodes (the model named one decision "If Valid") |
+| State machine | 18.2 s | valid; 7 states / pseudostates |
+| Component | 12.3 s | valid; 5 components, 5 relationships |
+| Deployment | 19.0 s | valid after the repair round; nesting lost — 3 unresolved parents reported as warnings |
+| Object | 12.0 s | valid; 2 objects, 1 link |
+
+All results were labelled **Local AI · qwen2.5-coder:1.5b**. The small model's omissions are reported, not filled in.
+
+### Visual review
+Every example type was screenshotted in the editor in light and dark themes (headless Edge) and reviewed. Fixed during review: drafts lost under React StrictMode, toolbar wrapping at 1440 px, inspector visibility selects too narrow, unlabelled AI switch, ligature arrows in the notation hint, and buttons inside `<label>` rows that took the wrong accessible name.
 
 ## Pre-publication verification (2026-11-20, staged repository contents)
 

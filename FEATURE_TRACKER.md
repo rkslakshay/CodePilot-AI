@@ -90,6 +90,19 @@ Status legend:
 | Repo Analyzer | **3.0** Findings management: search, filters, sort, reviewed / fixed / dismissed, notes, user-verified; persists across re-analysis and restart | Tested, E2E |
 | Repo Analyzer | **3.0** Reports: Markdown + PDF (local Edge headless), metadata, limitations, partial-analysis label | Tested (PDF bytes checked), E2E (downloads) |
 | Repo Analyzer | **3.0** Multiple repositories, background jobs with progress and cancel, removal keeps original folders | Tested, E2E |
+| UML Studio | **3.1** 8 diagram types with UML notation (class, use case, sequence, activity, state machine, component, deployment, object); example + blank for each | Tested (notation per type in SVG), E2E, Verified (screenshots, both themes) |
+| UML Studio | **3.1** Structured model with Zod schemas, semantic validation and notation rules, live issue list | Tested, E2E |
+| UML Studio | **3.1** Natural language → UML with local AI (validated contracts, repair round, warnings) | Tested (stub Ollama), live run with qwen2.5-coder:1.5b (8 / 8 types valid) |
+| UML Studio | **3.1** Offline rule-based generator (structured notation + sentences), labelled not AI, refuses unusable text | Tested (all spec examples), E2E (all 8 types) |
+| UML Studio | **3.1** Source → class / sequence / activity diagrams (Tree-sitter; Java, Python, TS, JS, C++, C) with evidence | Tested, E2E (pasted code, My Workspace file) |
+| UML Studio | **3.1** Repository → class / modules / architecture / deployment diagrams; refusal without evidence | Tested, E2E (from Repository Analyzer) |
+| UML Studio | **3.1** Canvas: pan, zoom, fit, reset, grid, select, drag (containers move contents), connect | E2E |
+| UML Studio | **3.1** Inspector for every element / relationship kind, outline, fragments, message order | E2E |
+| UML Studio | **3.1** Undo / redo, cascade delete, auto layout preserving manual positions, regenerate, unsaved-changes guard | Tested, E2E |
+| UML Studio | **3.1** Save / open / rename / duplicate / delete / search / filter; repository link (SET NULL on repository removal); migration v4 | Tested, E2E |
+| UML Studio | **3.1** Export SVG, PNG, PDF, PlantUML (all types), Mermaid (class / sequence / state) | Tested (PDF bytes, text output), E2E (downloads) |
+| UML Studio | **3.1** Entry points: sidebar, Dashboard, My Workspace, Repository Analyzer | E2E |
+| UML Studio | **3.1** Responsive layout (phone) and dark theme | E2E |
 | Not done | GitHub connection / OAuth / pull-request comments / webhooks (architecture planned in ARCHITECTURE.md) | Not started |
 | Not done | Dependency vulnerability lookup (needs an online database and consent) | Not started |
 | Not done | Container or Windows Sandbox isolation (would need image / feature downloads; declined) | Not started |

@@ -30,6 +30,7 @@ Browser (React SPA) ──/api──▶ Express API (127.0.0.1:4317) ──▶ S
 | `providers/` | `AIProvider` interface, `OllamaProvider`, `resolveAI()` / `aiJson()` with fallback and engine labels |
 | `engine/` | Offline language tooling (see below) |
 | `content/` | Algorithm library, step tracers, generator templates, learning content |
+| `uml/` | UML Studio (3.1): `generate.ts` (local AI with contracts, repair and offline fallback), `ai.ts`, `rules.ts` (offline natural-language rules), `from-source.ts` (Tree-sitter), `from-repo.ts` (repository evidence), `service.ts` (SQLite); routes in `routes/uml.ts`. The model, validation, layout and renderer live in `shared/uml` and are used by both server and client. |
 | `repo/` | Repository Analyzer (3.0): ZIP reader, scanner, project detection, analysis rules, dependencies, Git, AI review, reports, background jobs; routes in `routes/repos.ts` |
 | `execution/` | Runtime detection, static guard, executor, isolated runner process |
 | `database/` | Connection, pragmas, migrations |
@@ -145,13 +146,14 @@ The client visualiser only renders these snapshots. Nothing is animated decorati
 | `repo_dependencies` *(v3)* | Ecosystem, name, declared spec, resolved version, dev / direct flags, manifest |
 | `repo_reviews` *(v3)* | Cached AI reviews (scope, target, content hash, model, engine, JSON result) and folder / repository review summaries |
 | `repo_events` *(v3)* | Repository activity log (imports, analyses, triage) |
+| `uml_diagrams` *(v4)* | UML diagrams: name, type CHECK (8 types), validated model JSON, renderer, generation CHECK (ai / rules / source / repository / manual / template), optional `repo_id` / `project_id` (**ON DELETE SET NULL**), source path |
 | `quiz_answers` *(v2)* | Every answered MCQ: question, options, chosen, correct, mode (quiz / revision). The revision queue is "questions whose most recent answer was wrong". |
 
 All tables have timestamps, CHECK constraints and indexes on common query paths (profile + time, kind, language). Foreign keys are enforced (`PRAGMA foreign_keys = ON`). The database uses WAL mode.
 
 **Design choice:** one `history` table replaces the separate Generations / Conversions / ExecutionHistory tables suggested in the brief. Search, filtering, sorting, restore and dashboard statistics then work uniformly with one query. The `kind` column plus indexes give the same separation.
 
-**Migrations:** v1 (initial schema), v2 (`quiz_answers`) and v3 (Repository Analyzer tables, all `ON DELETE CASCADE` from `repositories`). Migrations only add structures; a 1.0 database is upgraded in place on start-up, and a test opens a v1 file with data and checks every record survives.
+**Migrations:** v1 (initial schema), v2 (`quiz_answers`), v3 (Repository Analyzer tables, all `ON DELETE CASCADE` from `repositories`) and v4 (`uml_diagrams`). Migrations only add structures; a 1.0 database is upgraded in place on start-up, and a test opens a v1 file with data and checks every record survives.
 
 **Backups:** `VACUUM INTO` writes a consistent, compacted copy to `server/data/backups/` while the app runs. Backups can be listed, downloaded and deleted from Settings.
 
@@ -275,6 +277,24 @@ The analysis pipeline only needs a folder, so GitHub support can be added withou
 6. **Commit analytics** — from local `git log` (already available) or the REST commits API.
 
 Limits: unauthenticated REST calls are limited to 60 requests / hour (5 000 with a token); private repositories need a token; all of it requires an internet connection. None of this is implemented, and the UI does not pretend otherwise.
+
+## UML Studio (3.1)
+
+```
+shared/uml  model.ts (Zod) · validate.ts · ops.ts (edits, History) · layout.ts (dagre + containment / lanes / use case / sequence) · render.ts (virtual SVG) · svg.ts · text.ts (PlantUML, Mermaid) · templates.ts
+server      uml/generate.ts → AI contract (names, not ids) → Zod → convert → semantic repair (1 round) → prune with warnings
+                            └─ fallback: uml/rules.ts (structured notation, sentence patterns) — labelled "not AI"
+            uml/from-source.ts (Tree-sitter) · uml/from-repo.ts (manifests, imports, compose, Dockerfiles) · uml/service.ts · routes/uml.ts · PDF via repo/report.ts renderPdf
+client      pages/UmlStudio.tsx (home + editor, History-based undo) · components/uml/Canvas.tsx (render() → SVG, data-el / data-rel hit testing, pan / zoom / drag) · Inspector.tsx · GenerateDialog.tsx · lib/uml.ts (SVG / PNG / PDF / text exports)
+```
+
+- **One renderer everywhere:** the same `render()` produces the canvas, the SVG / PNG export (browser) and the PDF (server), so exports match the screen.
+- **Manual positions win:** `layout.manual` lists moved elements; non-forced auto layout only places elements without a position. Stored dagre edge routes are used only while both ends are unmoved.
+- **Evidence:** generated elements and relationships carry `extracted / inferred / stated / ai` evidence with file and line where available; the UI shows it per item.
+- **Honesty:** offline results are labelled not AI; missing evidence produces a 422 explanation rather than an invented diagram. Mermaid export is offered only where Mermaid has the notation.
+- **Shared code:** `shared/` is an ES-module folder imported by the server through relative paths and by the client through the `@shared` alias (Vite + TS paths).
+
+Full reference: [docs/UML_STUDIO.md](docs/UML_STUDIO.md).
 
 ## Learning Hub (2.0)
 
